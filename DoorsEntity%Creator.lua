@@ -1,6 +1,5 @@
 --]] Qwerty Creator
 
-
 local Creator = {}
 
 function Creator.createEntity(config)
@@ -16,6 +15,7 @@ function Creator.spawnEntity(entity)
     task.spawn(function()
         local config = entity.Config
         
+        -- Определяем дистанцию появления
         local offset = 1
         if config.SpawnLocation == "next next room" then offset = 2
         elseif config.SpawnLocation == "next next next room" then offset = 3 end
@@ -34,6 +34,7 @@ function Creator.spawnEntity(entity)
                     model:SetPrimaryPartCFrame(pivot.CFrame * CFrame.new(0, 5, 0))
                 end
 
+                -- Настройка звука
                 if config.Sound and config.Sound[1] then
                     local root = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
                     local sound = Instance.new("Sound", root)
@@ -44,13 +45,23 @@ function Creator.spawnEntity(entity)
                     sound:Play()
                 end
 
+                -- Вызов функции после спавна
                 if entity.Debug.OnEntitySpawned then
                     entity.Debug.OnEntitySpawned()
                 end
 
+                -- ЛОГИКА УДАЛЕНИЯ ПО ВРЕМЕНИ (Delay)
                 task.spawn(function()
-                    repeat task.wait(2) until game.ReplicatedStorage.GameData.LatestRoom.Value > targetRoomNum + 1
-                    model:Destroy()
+                    if config.DelayTime then
+                        task.wait(config.DelayTime) -- Ждем указанное время
+                    else
+                        -- Если DelayTime не указан, удаляем когда игрок уйдет далеко
+                        repeat task.wait(2) until game.ReplicatedStorage.GameData.LatestRoom.Value > targetRoomNum + 1
+                    end
+                    
+                    if model then 
+                        model:Destroy() 
+                    end
                 end)
             end)
         end
