@@ -8,7 +8,7 @@
 Чтобы подключить API в свой скрипт, используйте `loadstring`:
 
 ```lua
-local Creator = loadstring(game:HttpGet("ТВОЯ_ССЫЛКА_НА_RAW_ФАЙЛ"))()
+local Creator = loadstring(game:HttpGet("ССЫЛКА_НА_RAW_ФАЙЛ"))()
 ```
 
 ## 📂 Пример создания монстра
