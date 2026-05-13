@@ -22,7 +22,7 @@ function Creator.spawnEntity(entityData)
     
     local success, model = pcall(function() 
         local objects = game:GetObjects(config.Model)
-        local asset = objects[1]
+        local asset = objects[1] -- ИСПРАВЛЕНО: Строго берем первый элемент массива модели
         if asset then
             return asset
         end
@@ -36,6 +36,14 @@ function Creator.spawnEntity(entityData)
     
     model.Name = config.CustomName or "CustomEntity"
     entityData.EntityModel = model
+    
+    -- ИСПРАВЛЕНО: Отключение коллизии (No-Clip), чтобы свободно проходить сквозь монстра
+    for _, part in ipairs(model:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+            part.Anchored = true -- Фиксируем в воздухе, чтобы детали не падали под карту
+        end
+    end
     
     local startPart = spawnRoom:FindFirstChild("Entrance") or spawnRoom.PrimaryPart
     if startPart then model:SetPrimaryPartCFrame(startPart.CFrame * CFrame.new(0, 2, 0)) end
@@ -55,17 +63,20 @@ function Creator.spawnEntity(entityData)
         sound:Play()
     end
     
+    -- ИСПРАВЛЕНО: Точное чтение CamShake формата {true, {6, 30, 1, 1}, 100}
     if config.CamShake and config.CamShake[1] == true and pPart then
         task.spawn(function()
             local cam = workspace.CurrentCamera
-            local sParams = config.CamShake[2] -- {6, 30, 1, 1}
-            local maxDist = config.CamShake[3] or 100
+            local sParams = config.CamShake[2] -- Вложенный массив параметров {6, 30, 1, 1}
+            local maxDist = config.CamShake[3] or 100 -- Дистанция (100)
             while model.Parent do
                 local char = game.Players.LocalPlayer.Character
                 if char and char:FindFirstChild("HumanoidRootPart") then
                     local dist = (char.HumanoidRootPart.Position - pPart.Position).Magnitude
                     if dist <= maxDist then
-                        local intensity = (sParams and sParams[1] or 5) * (1 - (dist / maxDist)) / 100
+                        -- Извлекаем первый индекс из подмассива (силу тряски 6)
+                        local forceNumber = (sParams and sParams[1]) or 5
+                        local intensity = forceNumber * (1 - (dist / maxDist)) / 100
                         cam.CFrame = cam.CFrame * CFrame.Angles(
                             math.random(-10,10)*intensity, 
                             math.random(-10,10)*intensity, 
